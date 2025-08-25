@@ -1,30 +1,28 @@
-# Etapa de construção
-FROM maven:3.8.4-openjdk-17 AS build
-
-# Define o diretório de trabalho
+# ---------- BUILD ----------
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copia o pom.xml e baixa as dependências
-COPY pom.xml .
-RUN mvn dependency:go-offline
+# Copia somente o pom primeiro para cache de deps
+COPY Back/pom.xml ./pom.xml
+RUN mvn -B -q -DskipTests dependency:go-offline
 
-# Copia o código-fonte para o container
-COPY src ./src
+# copia o código-fonte
+COPY Back/src ./src
 
-# Compila o projeto e gera o JAR
-RUN mvn clean package -DskipTests
+# Build do JAR
+RUN mvn -B clean package -DskipTests
 
-# Etapa de execução
-FROM openjdk:17-jdk-slim
-
-# Define o diretório de trabalho
+# ---------- RUNTIME ----------
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
-# Copia o JAR gerado na etapa de build
+# Copia o JAR gerado
 COPY --from=build /app/target/*.jar /app/app.jar
 
-# Expõe a porta do aplicativo
-EXPOSE 8080
+# Ajustes de memória para plano Free
+ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
 
-# Comando para rodar a aplicação
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar /app/app.jar"]
+# Usa a porta que o Render injeta
+ENTRYPOINT ["sh","-c","java -Dserver.port=${PORT:-8080} -jar /app/app.jar"]
+
+EXPOSE 8080
