@@ -86,13 +86,13 @@ public class SecurityConfig {
         @Bean
         CorsConfigurationSource corsConfigurationSource() {
             CorsConfiguration config = new CorsConfiguration();
-            config.setAllowedOrigins(List.of(frontendUrl));
-            config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
-            config.setAllowedHeaders(List.of("*"));
+            config.setAllowedOrigins(Arrays.asList(frontendUrl));
+            config.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
+            config.setAllowedHeaders(Arrays.asList("*"));
             config.setAllowCredentials(true);
         
             // MUITO IMPORTANTE: expor o header Authorization para o navegador
-            config.setExposedHeaders(List.of("Authorization"));
+            config.setExposedHeaders(Arrays.asList("Authorization"));
         
             UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
             source.registerCorsConfiguration("/**", config);
