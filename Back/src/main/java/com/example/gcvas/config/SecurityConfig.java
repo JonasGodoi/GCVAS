@@ -39,6 +39,9 @@ public class SecurityConfig {
         @Autowired
         private JWTUtil jwtUtil;
 
+        @Value("${frontend.url}")
+        private String frontendUrl;   
+
         private static final String[] PUBLIC_MATCHERS = {
                         "/Beneficiario/mes/**",
                         "/categorias/**", // Adicione essa linha
