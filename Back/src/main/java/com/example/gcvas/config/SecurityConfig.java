@@ -85,18 +85,20 @@ public class SecurityConfig {
 
         @Bean
         CorsConfigurationSource corsConfigurationSource() {
-                CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // Permitir apenas o front-end
-                                                                                         // de localhost
-                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
-                configuration.setAllowedHeaders(Arrays.asList("*"));
-                configuration.setAllowCredentials(true);
-
-                // Registra o CORS para todos os endpoints
-                final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                source.registerCorsConfiguration("/**", configuration); // Aplica para todos os endpoints
-                return source;
+            CorsConfiguration config = new CorsConfiguration();
+            config.setAllowedOrigins(List.of(frontendUrl));
+            config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+            config.setAllowedHeaders(List.of("*"));
+            config.setAllowCredentials(true);
+        
+            // MUITO IMPORTANTE: expor o header Authorization para o navegador
+            config.setExposedHeaders(List.of("Authorization"));
+        
+            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            source.registerCorsConfiguration("/**", config);
+            return source;
         }
+
 
         @Bean
         public BCryptPasswordEncoder bCryptPasswordEncoder() {
