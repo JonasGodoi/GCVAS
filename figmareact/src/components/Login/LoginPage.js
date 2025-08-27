@@ -24,10 +24,8 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Reset da mensagem de erro
     setErrorMessage("");
 
-    // Verifica se os campos estão preenchidos
     if (username.trim() === "" || password.trim() === "") {
       setErrorMessage("Por favor, preencha todos os campos.");
       return;
@@ -35,36 +33,46 @@ const LoginPage = () => {
 
     try {
       const response = await api.post("/login", {
-        username: username,
-        password: password,
+        username,
+        password,
       });
 
-      const authToken = response.headers.getAuthorization();
-      const decoded = jwtDecode(authToken.slice(7));
-      console.log(decoded);
+      // Axios normaliza cabeçalhos para minúsculas
+      const authHeader =
+        response.headers["authorization"] || response.headers["Authorization"];
+      if (!authHeader) throw new Error("Authorization header ausente");
 
+      // Pega apenas o JWT (sem o "Bearer ")
+      const jwt = authHeader.startsWith("Bearer ")
+        ? authHeader.slice(7)
+        : authHeader;
+
+      // Decodifica o token para obter o jti (id do usuário)
+      const decoded = jwtDecode(jwt);
+
+      // Guarde o header completo (com "Bearer ...") para o interceptor enviar depois
       if (rememberMeChecked) {
-        localStorage.setItem("authToken", authToken);
+        localStorage.setItem("authToken", authHeader);
       } else {
-        localStorage.setItem("authToken", authToken);
+        localStorage.setItem("authToken", authHeader);
       }
-
-      const userResponse = await api.get(`/user/${decoded.jti}`);
-      console.log(userResponse.data);
-
       localStorage.setItem("isAuthenticated", "true");
 
-      if (userResponse.data.profile.includes("ADM")) {
+      // Busca o usuário para decidir o redirecionamento
+      const userResponse = await api.get(`/user/${decoded.jti}`);
+      const user = userResponse.data;
+
+      if (String(user.profile).includes("ADM")) {
         navigate("/menuassistente", { replace: true });
-      } else if (userResponse.data.profile.includes("SECRETARIA")) {
+      } else if (String(user.profile).includes("SECRETARIA")) {
         navigate("/menusecretaria", { replace: true });
-      } else if (userResponse.data.profile.includes("OUTROS")) {
+      } else if (String(user.profile).includes("OUTROS")) {
         navigate("/menuoutros", { replace: true });
-      } else if (userResponse.data.profile.includes("ASSISTENTE")) {
+      } else if (String(user.profile).includes("ASSISTENTE")) {
         navigate("/assistente", { replace: true });
       }
     } catch (err) {
-      console.log(err);
+      console.error(err);
       setErrorMessage("Usuário ou senha inválidos.");
     }
   };
